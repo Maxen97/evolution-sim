@@ -1,4 +1,5 @@
-from asyncio import create_subprocess_exec
+"""Module containig World and MapObject classes."""
+
 import math
 import random
 import util
@@ -7,46 +8,53 @@ import numpy as np
 
 
 class World:
-	def __init__(self, drawer):
+	"""World object contains all creatures and food."""
+
+	def __init__(self, drawer, MAP_LIMIT, MAX_NUMBER_OF_FOOD, 
+				 MAX_NUMBER_OF_CREATURES):
+		"""Initializes world and spawns starting creatures and food."""
 		self.drawer = drawer
+		self.MAP_LIMIT = MAP_LIMIT
+		self.MAX_NUMBER_OF_FOOD = MAX_NUMBER_OF_FOOD
+		self.MAX_NUMBER_OF_CREATURES = MAX_NUMBER_OF_CREATURES
 		self.foods = []
 		self.creatures = []
 
-		number_of_foods = 50
-		number_of_creatures = 1
-		for _ in range(0, number_of_foods):
-			self.spawn_food()
-		
-		for _ in range(0, number_of_creatures):
-			self.spawn_creature()
+		# Spawn initial set of creatures and food
+		for _ in range(MAX_NUMBER_OF_FOOD): self.spawn_food()
+		for _ in range(MAX_NUMBER_OF_CREATURES): self.spawn_creature()
 
 	def spawn_creature(self):
+		"""Spawns a creature."""
 		self.creatures.append(Creature(self.drawer, self))
 
 	def spawn_food(self):
+		"""Spawns a food."""
 		self.foods.append(Food(self.drawer, self))
 
 	def update(self, dt):
-		for food in self.foods:
-			food.update()
-		for creature in self.creatures:
-			creature.update()
+		"""Calls for update for all creatures and food in the world."""
+		for food in self.foods: food.update()
+		for creature in self.creatures: creature.update()
 
 	def draw(self):
-		for food in self.foods:
-			food.draw()
-		for creature in self.creatures:
-			creature.draw()
+		"""Calls a draw call for all creatures and food in the world."""
+		for food in self.foods: food.draw()
+		for creature in self.creatures: creature.draw()
 
 
 class MapObject:
+	"""Wrapper of all objects visible in the world."""
 	def __init__(self, drawer, world):
 		self.drawer = drawer
 		self.world = world
-		self.x, self.y = util.randomPointOnCircle(180)
+		self.x, self.y = util.randomPointOnCircle(self.world.MAP_LIMIT)
 		
 
 class Creature(MapObject):
+	"""Creature object extending MapObject.
+	Contains update, init, and draw methods.
+	"""
 	def __init__(self, drawer, world):
 		self.size = 10 #also used as mass, i.e. size equivilant to mass
 		self.xVel = 0
@@ -159,8 +167,12 @@ class Creature(MapObject):
 			self.y + (self.sight) * math.sin(self.direction),
 			(255 - self.color[0], 255 - self.color[1], 255 - self.color[2], 255))
 
+
 class Food(MapObject):
+	"""Food object extending MapObject."""
+
 	def __init__(self, drawer, world):
+		"""Initializes food object."""
 		self.size = random.uniform(3, 8)
 		self.base_color = [55, 255, 120, 255]
 		self.hit_color = [255, 0, 0, 255]
@@ -171,6 +183,7 @@ class Food(MapObject):
 		self.color = self.base_color
 	
 	def hit(self):
+		"""If food is seen by a create, the color will be changed."""
 		self.color = self.hit_color
 	
 	def draw(self):
