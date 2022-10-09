@@ -1,5 +1,5 @@
 import pyglet
-from math import sin, cos, pi, sqrt
+from math import sin, cos, pi
 
 class Drawer:
 	def __init__(self):

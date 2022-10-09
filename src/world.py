@@ -1,3 +1,4 @@
+from asyncio import create_subprocess_exec
 import math
 import random
 import util
@@ -6,8 +7,6 @@ import numpy as np
 
 
 class World:
-	"""Contains all creatures and food with update methods."""
-
 	def __init__(self, drawer):
 		self.drawer = drawer
 		self.foods = []
@@ -16,24 +15,39 @@ class World:
 		number_of_foods = 50
 		number_of_creatures = 1
 		for _ in range(0, number_of_foods):
-			self.foods.append(Food(drawer))
+			self.spawn_food()
 		
 		for _ in range(0, number_of_creatures):
-			self.creatures.append(Creature(drawer))
-	
+			self.spawn_creature()
 
-	def update(self):
-		"""Updates all creatures and food."""
-		pass
+	def spawn_creature(self):
+		self.creatures.append(Creature(self.drawer, self))
+
+	def spawn_food(self):
+		self.foods.append(Food(self.drawer, self))
+
+	def update(self, dt):
+		for food in self.foods:
+			food.update()
+		for creature in self.creatures:
+			creature.update()
+
+	def draw(self):
+		for food in self.foods:
+			food.draw()
+		for creature in self.creatures:
+			creature.draw()
 
 
 class MapObject:
-	def __init__(self, drawer):
+	def __init__(self, drawer, world):
 		self.drawer = drawer
+		self.world = world
 		self.x, self.y = util.randomPointOnCircle(180)
 		
+
 class Creature(MapObject):
-	def __init__(self, drawer):
+	def __init__(self, drawer, world):
 		self.size = 10 #also used as mass, i.e. size equivilant to mass
 		self.xVel = 0
 		self.yVel = 0
@@ -54,10 +68,10 @@ class Creature(MapObject):
 		inputs = ('color0', 'color1', 'color2', 'color3', 'sight distance')
 		outputs = ('ddirection', 'thrust', 'eat')
 		self.brain = nn.Brain((len(inputs), 8, len(outputs)))
-		super().__init__(drawer)
+		super().__init__(drawer, world)
 		
-	def update(self, foods, creatures):
-		"""Updates collision and movement.
+	def update(self):
+		""" Updates collision and movement.
 		"""
 
 		objects_in_sight = []	# List of objects within sight
@@ -67,7 +81,7 @@ class Creature(MapObject):
 		py = self.y + self.sight * math.sin(self.direction)
 
 		# Check collision between sight and food objects
-		for food in foods:
+		for food in self.world.foods:
 			d = util.distanceLinePoint(self.x, self.y,
 									   px, py,
 									   food.x, food.y)
@@ -115,11 +129,11 @@ class Creature(MapObject):
 		self.energy -= abs(self.ddirection)
 		
 		if self.eat >= 0.4:
-			for food in foods:
+			for food in self.world.foods:
 				if util.distance(self.x, self.y, food.x, food.y) <= self.size + self.reach: #THIS CAN BE OPTIMIZED BY CALCULATING ONCE
 					self.energy += food.size * 2
-					foods.remove(food)
-					foods.append(Food(self.drawer))
+					self.world.foods.remove(food)
+					self.world.spawn_food()
 			self.energy -= 5
 			#print("has eaten")
 			#print("new energy: ", self.energy)
@@ -134,8 +148,8 @@ class Creature(MapObject):
 		self.thrust = 0
 		
 		if util.distance(self.x, self.y, 0, 0) > 200 or self.energy <= 0: #i.e. outside of map or no energy
-			creatures.remove(self)
-			creatures.append(Creature(self.drawer))
+			self.world.creatures.remove(self)
+			self.world.spawn_creature()
 		
 	def draw(self):
 		self.drawer.circ(self.x, self.y, self.size, self.color, 16)
@@ -146,12 +160,12 @@ class Creature(MapObject):
 			(255 - self.color[0], 255 - self.color[1], 255 - self.color[2], 255))
 
 class Food(MapObject):
-	def __init__(self, drawer):
+	def __init__(self, drawer, world):
 		self.size = random.uniform(3, 8)
 		self.base_color = [55, 255, 120, 255]
 		self.hit_color = [255, 0, 0, 255]
 		self.color = self.base_color
-		super().__init__(drawer)
+		super().__init__(drawer, world)
 		
 	def update(self):
 		self.color = self.base_color
