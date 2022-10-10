@@ -24,18 +24,22 @@ class World:
 		for _ in range(MAX_NUMBER_OF_FOOD): self.spawn_food()
 		for _ in range(MAX_NUMBER_OF_CREATURES): self.spawn_creature()
 
+
 	def spawn_creature(self):
 		"""Spawns a creature."""
 		self.creatures.append(Creature(self.drawer, self))
+
 
 	def spawn_food(self):
 		"""Spawns a food."""
 		self.foods.append(Food(self.drawer, self))
 
+
 	def update(self, dt):
 		"""Calls for update for all creatures and food in the world."""
 		for food in self.foods: food.update()
 		for creature in self.creatures: creature.update()
+
 
 	def draw(self):
 		"""Calls a draw call for all creatures and food in the world."""
@@ -78,6 +82,7 @@ class Creature(MapObject):
 		self.brain = b.Brain((len(inputs), 8, len(outputs)))
 		super().__init__(drawer, world)
 		
+
 	def update(self):
 		""" Updates collision and movement.
 		"""
@@ -99,7 +104,8 @@ class Creature(MapObject):
 		
 		closest_distance = np.inf
 		self.object_in_sight = None
-		for object in objects_in_sight: #THIS CAN BE OPTIMIZED BY EVALUATING THIS IN LOOP ABOVE
+		#THIS CAN BE OPTIMIZED BY EVALUATING THIS IN LOOP ABOVE
+		for object in objects_in_sight: 
 			distance = util.distance(object.x, object.y, self.x, self.y) 
 			if distance < closest_distance:
 				closest_distance = distance
@@ -120,7 +126,7 @@ class Creature(MapObject):
 		#print(color)
 		#print(distance)
 		
-		u = (self.brain.run(np.array([[color[0]], [color[1]], [color[2]], [color[3]], [distance*6]])))
+		u = (self.brain.forward(np.array([[color[0]], [color[1]], [color[2]], [color[3]], [distance*6]])))
 		self.ddirection, self.thrust, self.eat = u[0]/10, u[1], u[2]
 		#print('ddir: ', u[0])
 		#print('eat: ', self.eat)
@@ -159,6 +165,7 @@ class Creature(MapObject):
 			self.world.creatures.remove(self)
 			self.world.spawn_creature()
 		
+
 	def draw(self):
 		self.drawer.circ(self.x, self.y, self.size, self.color, 16)
 		self.drawer.circ(self.x, self.y, self.size + self.reach, (self.color[0],self.color[1],self.color[2],60), 16)
@@ -179,13 +186,16 @@ class Food(MapObject):
 		self.color = self.base_color
 		super().__init__(drawer, world)
 		
+
 	def update(self):
 		self.color = self.base_color
 	
+
 	def hit(self):
 		"""If food is seen by a create, the color will be changed."""
 		self.color = self.hit_color
 	
+
 	def draw(self):
 		self.drawer.circ(self.x, self.y, self.size, self.color, 16)
 		
