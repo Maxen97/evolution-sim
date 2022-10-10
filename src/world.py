@@ -3,7 +3,7 @@
 import math
 import random
 import util
-import neuralnetwork as nn
+import brain as b
 import numpy as np
 
 
@@ -75,7 +75,7 @@ class Creature(MapObject):
 		self.object_in_sight = None
 		inputs = ('color0', 'color1', 'color2', 'color3', 'sight distance')
 		outputs = ('ddirection', 'thrust', 'eat')
-		self.brain = nn.Brain((len(inputs), 8, len(outputs)))
+		self.brain = b.Brain((len(inputs), 8, len(outputs)))
 		super().__init__(drawer, world)
 		
 	def update(self):
